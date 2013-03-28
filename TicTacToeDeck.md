@@ -245,8 +245,8 @@ also expecting this to pass without changes
 ~~~~
 @@@ ruby
 it "should always have the array within the array length of 3" do
-	@show_board.board.each { |array| array.length } == 3		
-end
+	@show_board.board.each { |array| array.length.should == 3 } 		
+end 
 ~~~~
 
 ~~~~
@@ -263,24 +263,204 @@ Finished in 0.01379 seconds
 
 ~~~~
 @@@ ruby
-describe "player_position" do 
+describe "assign_player_position" do 
 	it "should establish a position on the board, using 'x' or 'o'" do
-		@show_board.player_position('x', 0, 1) == @show_board.board[0][1]
+		p = @show_board.assign_player_position('x', 0, 1)
+		p.should == @show_board.board[0][0]
 	end
 end
 ~~~~
 
-I'm having trouble with this, the test passes with just the following code
-since it include the correct number of agruments...
+running test...
 
 ~~~~
 @@@ ruby
-def player_position(position, first_element, second_element)
+TicTacToe$ bundle exec rspec spec/models/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+...F
 
+Failures:
+
+  1) Board assign_player_position should establish a position on the board, using 'x' or 'o'
+     Failure/Error: p.should == @show_board.board[0][0]
+       expected: nil
+            got: "x" (using ==)
+~~~~
+
+!SLIDE
+
+yay!...it failed! Now for the method to assign a position...
+
+~~~~
+@@@ ruby
+	def assign_player_position(player, row, column)
+		@board[row][column] = player
+	end
+~~~~
+
+~~~~
+@@@ ruby
+TicTacToe$ bundle exec rspec spec/models/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+....
+
+Finished in 0.01381 seconds
+4 examples, 0 failures
+~~~~
+
+beautiful....
+
+!SLIDE
+
+we've got to make something to dispay the board now...of course, another method, test first..
+
+~~~~
+@@@ ruby
+
+	describe "display_board" do 
+		it "should display board" do 
+			to_test = @show_board.display_board.should == " | | \n" + 
+														  "_ _ _\n" +
+														  " | | \n" +
+     													  "_ _ _\n" +
+														  " | | \n"
+		end
+	end
+~~~~
+
+~~~~
+@@@ ruby
+TicTacToe$ bundle exec rspec spec/models/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+....F
+
+Failures:
+
+  1) Board display_board should display board
+     Failure/Error: " | | \n"
+       expected: " | | \n_ _ _\n | | \n_ _ _\n | | \n"
+            got: nil (using ==)
+     # ./spec/models/board_spec.rb:36:in `block (3 levels) in <top (required)>'
+
+Finished in 0.01675 seconds
+5 examples, 1 failure
+~~~~
+
+!SLIDE
+
+it failed! so nice!...let's back up, how do we make the board look that way. Well, we know it's going to be a string but it's either player ('x' or 'o') is going to have to appear on the board. let's break this down even further, we want another method to display the element in the array, for now, let's call this display element.
+
+~~~~
+@@@ ruby
+
+describe "display_element" do
+		it "should display @board element" do
+			mock_player = @show_board.assign_player_position('x', 0, 1)
+
+			to_test = @show_board.display_element(0,1)
+			to_test.should == mock_player
+		end
+~~~~
+
+!SLIDE
+
+alright...we made a mock_player to assign the play position, we want to specify at which point and how that player position should be displayed. In the first test, we want the player we assign to be displayed rather than nil. Let's watch it fail...
+
+
+# watching the test above fail is missing. TODO
+
+!SLIDE
+
+...now let's test make it so whenever there is a nil element in the array, we make a space. 
+
+~~~~
+@@@ ruby
+
+		it "should display a space if the element is nil" do
+			@show_board.display_element(0,0).should == ' '
+		end
+~~~~
+
+~~~~
+@@@ ruby
+TicTacToe$ bundle exec rspec spec/models/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+.....F
+
+Failures:
+
+  1) Board display_element should display a space if the element is nil
+     Failure/Error: @show_board.display_element(0,0).should == ' '
+       expected: " "
+            got: nil (using ==)
+     # ./spec/models/board_spec.rb:39:in `block (3 levels) in <top (required)>'
+
+Finished in 0.01616 seconds
+6 examples, 1 failure
+~~~~
+
+!SLIDE
+
+~~~~
+@@@ ruby
+TicTacToe$ bundle exec rspec spec/models/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+.....
+
+Finished in 0.0151 seconds
+5 examples, 0 failures
+
+it "should display a space if the element is nil" do
+	@show_board.display_element(0,0).should == ' '
 end
 ~~~~
 
-...will need to write the test, do I want 'x' or 'o' to append into the board? Or do we just want to know how to identify a position?...
+# if the element is not a space, let's make sure it a player we want, 'x' or 'o'...
+
+~~~~
+@@@ ruby
+
+		it "should display an 'x' or an 'o' if the element is not a space" do
+		  @show_board.assign_player_position('x', 0, 1)
+		  @show_board.display_element(0,1).should == 'x'
+		end
+~~~~
+
+# TODO show the failing test...
+
+!SLIDE
+
+~~~~
+@@@ ruby
+
+	def display_element(row, column)
+		element = @board[row][column]
+		if element
+			element
+		else
+			' '
+		end
+	end
+~~~~
+
+# TODO so the passing test...
+
+...alright. back to think about displaying the board on a high level. We've specify when to display a play and space...let's write it
+
+~~~~
+@@@ ruby
+
+	def display_board
+		puts "#{display_element(0,0)}|#{display_element(0,1)}|#{display_element(0,2)}\n" +
+	         "- - -\n" +
+		     "#{display_element(1,0)}|#{display_element(1,1)}|#{display_element(1,2)}\n" +
+		     "- - -\n" +
+		     "#{display_element(2,0)}|#{display_element(2,1)}|#{display_element(2,2)}\n"
+	end
+
+~~~~
+
+# TODO more for the board...
 
 # switching gears and working on board controller...
 
@@ -337,10 +517,8 @@ alright, what do controllers need?
 
 ### TODOs, notes and to think about...
 
-* `we've got the board controller class, so we'll be adding methods to set the board, just setting a new one for now...wait, nothing in routes.rb, ok it's probably time to generate something to the model so we can then do stuff with the controllers`
-* `back to the models, what should my board model include? - player_position:string and...`
-* `keep to board as an array with default nil values?`
+* `routes for the board`
+* `generate models and run a migration? what should my board model include? - player_position:string and...`
 * `list out other items for board needs...i.e., idenitfying the position`
-* `test the views and controller for the board`
-* `generate the model and run a migration? need to decide what the datatypes should be on the board`
-* `creating branches`
+* `test and make the views and controller for the board`
+* `create a new_board method`
