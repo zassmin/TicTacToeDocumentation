@@ -462,6 +462,35 @@ end
 
 # TODO more for the board...
 
+!SLIDE
+
+refactoring Board#display_board - added a display_line method:
+
+~~~~
+@@@ ruby
+def display_line(num)
+	"#{display_element(num,0)}|#{display_element(num,1)}|#{display_element(num,2)}\n"
+end
+~~~~
+
+and the new display_board method:
+
+~~~~
+@@@ ruby
+def display_board
+  display_line(0) +
+  "- - -\n" +
+  display_line(1) +
+	"- - -\n" +
+  display_line(2)
+end
+~~~~
+
+
+# Note:
+Eventually this display_board function won't actually be necessary.  In the views, we can draw a permanent grid
+and insert the value of each cell into it.
+
 # switching gears and working on board controller...
 
 creating a spec/controllers/board_controller_spec.rb
