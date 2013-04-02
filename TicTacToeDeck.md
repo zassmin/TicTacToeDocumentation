@@ -445,7 +445,8 @@ end
 
 # TODO so the passing test...
 
-...alright. back to think about displaying the board on a high level. We've specify when to display a play and space...let's write it
+
+...alright. back to think about displaying the board on a high level. We've specify when to display a player and space...let's make a board...
 
 ~~~~
 @@@ ruby
@@ -488,8 +489,59 @@ end
 
 
 # Note:
-Eventually this display_board function won't actually be necessary.  In the views, we can draw a permanent grid
-and insert the value of each cell into it.
+Eventually this display_board function won't actually be necessary.  In the views, we can draw a permanent grid and insert the value of each cell into it.
+For now, let's test the display line in tictactoe. the test...
+
+~~~~
+@@@ ruby
+	describe "display_line" do 
+		it "should display element in the designated row" do 
+			@show_board.assign_player_position('x', 0, 2)
+			@show_board.display_element(0,2)
+
+			to_test = @show_board.display_line(0)
+			to_test.should == " | |x\n"
+		end
+	end
+~~~~
+
+!SLIDE
+
+and it fails...
+
+~~~~
+@@@ ruby
+TicTacToe$ bundle exec rspec spec/models/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+.......F
+
+Failures:
+
+  1) Board display_line should display element in the designated row
+     Failure/Error: to_test = @show_board.display_element(0,2).display_row(0)
+     NoMethodError:
+       undefined method `display_line' for "x":String
+     # ./spec/models/board_spec.rb:52:in `block (3 levels) in <top (required)>'
+
+Finished in 0.02304 seconds
+8 examples, 1 failure
+~~~~
+
+let's make it pass....
+
+~~~~
+@@@ ruby
+
+    def display_line(row)
+   		"#{display_element(row,0)}|#{display_element(row,1)}|#{display_element(row,2)}\n"
+    end
+~~~~
+
+!SLIDE
+
+now we need to test that the element shows up on the board, we have the board method already....
+
+TODO one more test for board line
 
 # switching gears and working on board controller...
 
@@ -547,6 +599,7 @@ alright, what do controllers need?
 ### TODOs, notes and to think about...
 
 * `routes for the board`
+* `resources: board`
 * `generate models and run a migration? what should my board model include? - player_position:string and...`
 * `list out other items for board needs...i.e., idenitfying the position`
 * `test and make the views and controller for the board`
