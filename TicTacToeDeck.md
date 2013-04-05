@@ -6,10 +6,7 @@ Please note - this is a rough draft.
 
 # test Board.rb
 
-Does a the file exist?
-Does the board exist?
-
-Making the first test
+Starting with the test...checking whether board.rb and Board class exist
 
 ~~~~
 @@@ ruby
@@ -25,7 +22,7 @@ end
 
 ~~~~
 @@@ ruby
-rspec spec
+TicTacToe$ rspec spec
 /Users/zmontesd/.rvm/gems/ruby-1.9.3-p194@global/gems/bundler-1.1.4/lib/bundler/runtime.rb:31:in `block in setup': You have already activated rspec-core 2.12.2, but your Gemfile requires rspec-core 2.10.1. Using bundle exec may solve this. (Gem::LoadError)
 ~~~~
 
@@ -38,12 +35,11 @@ running bundle exec...just trying to specify a particular rspec version to use..
 
 ~~~~
 @@@ ruby
-TicTacToe$ bundle exec rspec-core 2.10.1
-bundler: command not found: rspec-core
-Install missing gem executables with `bundle install`
-TicTacToe$ bundle exec rspec spec
-WARNING: Cucumber-rails required outside of env.rb.  The rest of loading is being defered until env.rb is called.
-  To avoid this warning, move 'gem cucumber-rails' under only group :test in your Gemfile
+
+	TicTacToe$ bundle exec rspec spec
+	WARNING: Cucumber-rails required outside of env.rb.  The rest of loading is being defered until env.rb is called.
+  	To avoid this warning, move 'gem cucumber-rails' under only group :test in your Gemfile
+
 ~~~~
 
 !SLIDE
@@ -60,23 +56,13 @@ $ rake cucumber
 
 !SLIDE
 
-and just for kicks...
-I haven't generated a model. See this as necessary, but don't think it'll hurt...
-
-~~~~
-@@@ ruby
-$ rake db:migrate
-$ rake db:test:prepare
-~~~~
-
 ran...
 
 ~~~~
 @@@ ruby
-$ bundle exec rspec spec
+TicTacToe$ bundle exec rspec spec
 ~~~~
 
-!SLIDE
 and again... 
 
 ~~~~
@@ -98,7 +84,7 @@ and of course...
 
 ~~~~
 @@@ ruby
-$ bundle install
+TicTacToe$ bundle install
 ~~~~
 
 !SLIDE
@@ -190,7 +176,7 @@ Finished in 0.01067 seconds
 !SLIDE
 
 yay! But again where pair programming would be useful...I don't know if we want the
-default value to be nil for the array, or whether it should have specific coordinates or huh...will it really name it a board?
+default value to be nil for the array...or if it should be something else, keeping it nil until we decide otherwise.
 
 ~~~~
 @@@ ruby
@@ -223,19 +209,23 @@ We are expecting this to pass since we already the array set to 3
 
 ~~~~
 @@@ ruby
-it "should always have a length of 3" do 
-	@show_board.board.length == 3
-end
+	
+	it "should always have a length of 3" do 
+		@show_board.board.length.should == 3
+	end
+
 ~~~~
 
 ~~~~
 @@@ ruby
-TicTacToe$ bundle exec rspec spec
-Rack::File headers parameter replaces cache_control after Rack 1.5.
-..
 
-Finished in 0.0145 seconds
-2 examples, 0 failures
+	TicTacToe$ bundle exec rspec spec
+	Rack::File headers parameter replaces cache_control after Rack 1.5.
+	..
+
+	Finished in 0.0145 seconds
+	2 examples, 0 failures
+
 ~~~~
 
 # Since there is an array within the an array, let's make sure their length is always 3...
@@ -244,47 +234,52 @@ also expecting this to pass without changes
 
 ~~~~
 @@@ ruby
-it "should always have the array within the array length of 3" do
-	@show_board.board.each { |array| array.length.should == 3 } 		
-end 
+	
+	it "should always have the array within the array length of 3" do
+		@show_board.board.each { |array| array.length.should == 3 } 		
+	end
 ~~~~
 
 ~~~~
 @@@ ruby
-TicTacToe$ bundle exec rspec spec
-Rack::File headers parameter replaces cache_control after Rack 1.5.
-...
+	TicTacToe$ bundle exec rspec specify
+	Rack::File headers parameter replaces cache_control after Rack 1.5.
+	...
 
-Finished in 0.01379 seconds
-3 examples, 0 failures
+	Finished in 0.01379 seconds
+	3 examples, 0 failures
 ~~~~
 
 # Now that we have the details of our board, let's establish the details of placing a player onto the board
 
 ~~~~
 @@@ ruby
-describe "assign_player_position" do 
-	it "should establish a position on the board, using 'x' or 'o'" do
-		p = @show_board.assign_player_position('x', 0, 1)
-		p.should == @show_board.board[0][0]
+
+	describe "assign_player_position" do 
+		it "should establish a position on the board, using 'x' or 'o'" do
+			p = @show_board.assign_player_position('x', 0, 1)
+			p.should == @show_board.board[0][1]
+		end
 	end
-end
+
 ~~~~
 
 running test...
 
 ~~~~
 @@@ ruby
-TicTacToe$ bundle exec rspec spec/models/
-Rack::File headers parameter replaces cache_control after Rack 1.5.
-...F
 
-Failures:
+	TicTacToe$ bundle exec rspec spec/models/
+	Rack::File headers parameter replaces cache_control after Rack 1.5.
+	...F
 
-  1) Board assign_player_position should establish a position on the board, using 'x' or 'o'
-     Failure/Error: p.should == @show_board.board[0][0]
-       expected: nil
+	Failures:
+
+  	1) Board assign_player_position should establish a position on the board, using 'x' or 'o'
+     	Failure/Error: p.should == @show_board.board[0][0]
+       		expected: nil
             got: "x" (using ==)
+
 ~~~~
 
 !SLIDE
@@ -293,19 +288,23 @@ yay!...it failed! Now for the method to assign a position...
 
 ~~~~
 @@@ ruby
+	
 	def assign_player_position(player, row, column)
 		@board[row][column] = player
 	end
+
 ~~~~
 
 ~~~~
 @@@ ruby
-TicTacToe$ bundle exec rspec spec/models/
-Rack::File headers parameter replaces cache_control after Rack 1.5.
-....
+	
+	TicTacToe$ bundle exec rspec spec/models/
+	Rack::File headers parameter replaces cache_control after Rack 1.5.
+	....
 
-Finished in 0.01381 seconds
-4 examples, 0 failures
+	Finished in 0.01381 seconds
+	4 examples, 0 failures
+
 ~~~~
 
 beautiful....
@@ -319,11 +318,11 @@ we've got to make something to dispay the board now...of course, another method,
 
 	describe "display_board" do 
 		it "should display board" do 
-			to_test = @show_board.display_board.should == " | | \n" + 
-														  "_ _ _\n" +
-														  " | | \n" +
-     													  "_ _ _\n" +
-														  " | | \n"
+			@show_board.display_board.should == " | | \n" + 
+												"_ _ _\n" +
+												" | | \n" +
+     											"_ _ _\n" +
+												" | | \n"
 		end
 	end
 ~~~~
@@ -494,10 +493,10 @@ For now, let's test the display line in tictactoe. the test...
 
 ~~~~
 @@@ ruby
+
 	describe "display_line" do 
-		it "should display element in the designated row" do 
+		it "should display player marks or a space (if nil) in the designated row" do 
 			@show_board.assign_player_position('x', 0, 2)
-			@show_board.display_element(0,2)
 
 			to_test = @show_board.display_line(0)
 			to_test.should == " | |x\n"
@@ -517,7 +516,7 @@ Rack::File headers parameter replaces cache_control after Rack 1.5.
 
 Failures:
 
-  1) Board display_line should display element in the designated row
+  1) Board display_line should display player marks or a space (if nil) in the designated row
      Failure/Error: to_test = @show_board.display_element(0,2).display_row(0)
      NoMethodError:
        undefined method `display_line' for "x":String
@@ -539,9 +538,90 @@ let's make it pass....
 
 !SLIDE
 
-now we need to test that the element shows up on the board, we have the board method already....
+now we need to test that line shows up on the board, we have the board method already, let's unpend the display board tests and add a new test....
 
-TODO one more test for board line
+~~~~
+@@@ ruby
+
+    	it "should display player marks on the board" do
+    		@show_board.assign_player_position('x', 0, 0)
+    		@show_board.assign_player_position('o', 1, 1)
+    		@show_board.assign_player_position('x', 2, 2)
+
+    		@show_board.display_board.should == " | | \n" + 
+	 											"- - -\n" +
+	 											" | | \n" +
+      											"- - -\n" +
+	 											" | | \n"
+		end
+~~~~
+
+let's just see if it's working, it should fail, once it does, we'll update the test.
+
+!SLIDE
+
+~~~~
+@@@ ruby
+
+TicTacToe$ bundle exec rspec spec/models/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+.........F
+
+Failures:
+
+  1) Board display_board should display player marks on the board
+     Failure/Error: " | | \n"
+       expected: " | | \n- - -\n | | \n- - -\n | | \n"
+            got: "x| | \n- - -\n |o| \n- - -\n | |x\n" (using ==)
+       Diff:
+       
+       
+       @@ -1,6 +1,6 @@
+       - | | 
+       +x| | 
+        - - -
+       - | | 
+       + |o| 
+        - - -
+       - | | 
+       + | |x
+     # ./spec/models/board_spec.rb:76:in `block (3 levels) in <top (required)>'
+
+Finished in 0.02126 seconds
+10 examples, 1 failure
+~~~~
+
+!SLIDE
+
+Yay! failing test. Now, I'm going to rewrite it so it can pass...
+
+~~~~
+@@@ ruby
+
+    		@show_board.display_board.should == "x| | \n" + 
+	 											"- - -\n" +
+	 											" |o| \n" +
+      											"- - -\n" +
+	 											" | |x\n"
+~~~~
+
+and...
+
+~~~~
+@@@ ruby
+
+TicTacToe$ bundle exec rspec spec/models/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+..........
+
+Finished in 0.02526 seconds
+10 examples, 0 failures
+~~~~
+ 
+!SLIDE
+
+# TODO make routes via resources
+
 
 # switching gears and working on board controller...
 
