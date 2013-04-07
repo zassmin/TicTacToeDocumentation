@@ -11,7 +11,7 @@ Starting with the test...checking whether board.rb and Board class exist
 ~~~~
 @@@ ruby
 require 'spec_helper'
-require 'board.rb'
+require 'board'
 
 describe Board do 
 	
@@ -620,19 +620,365 @@ Finished in 0.02526 seconds
  
 !SLIDE
 
-# TODO make routes via resources
+Changing things up a bit and will shift methods in board.rb to game.rb, first thing will be to generate a model with players (x and o), current_player, board, created_at, status, and updated_at. Then we'll rewrite the tests for the board class and test for some of the methods. It will now be a game class. Keeping this in my repo until we decide we want this to be it! Pumped!!!
 
+!SLIDE
 
-# switching gears and working on board controller...
+~~~~
+@@@ ruby
 
-creating a spec/controllers/board_controller_spec.rb
+TicTacToe$ rails generate model Game board:text player_o:string player_x:string current_player:string status:string created_at:datetime updated_at:datetime
+      invoke  active_record
+      create    db/migrate/20130406222125_create_games.rb
+      create    app/models/game.rb
+      invoke    test_unit
+      create      test/unit/game_test.rb
+      create      test/fixtures/games.yml
+~~~~
+
+!SLIDE
+
+now migration time...
+
+~~~~
+@@@ ruby
+
+TicTacToe$ rake db:migrate
+==  CreateGames: migrating ====================================================
+-- create_table(:games)
+   -> 0.0026s
+==  CreateGames: migrated (0.0028s) ===========================================
+TicTacToe$ rake db:test:prepare
+
+~~~~
+
+# adding defaults to the schema...
+
+~~~~
+@@@ ruby
+
+ActiveRecord::Schema.define(:version => 20130406222125) do
+
+  create_table "games",          :force => true do |t|
+    t.text     "board",          :default => "[[],[],[]]"
+    t.string   "player_o"
+    t.string   "player_x"
+    t.string   "current_player"
+    t.string   "status",         :default => "in_progress"
+    t.datetime "created_at",     :null => false
+    t.datetime "updated_at",     :null => false
+  end
+
+end
+~~~~
+
+# updating game.rb by adding the Board class and changing it to the game class, using inheritance to call on ActiveRecord
+
+~~~~
+@@@ ruby
+
+class Game < ActiveRecord::Base
+~~~~ 
+
+changing attr_accessor to...
+
+~~~~
+@@@ ruby
+
+attr_accessible :board, :player_o, :player_x, :current_player, :status, :created_at
+~~~~
+
+...since we now have a migrated db
+
+# assigning defaults to board and players...will assign defaults to status, created_at, and current player as they are needed in the method
+
+~~~~
+@@@ ruby
+
+	def initialize 
+		@board = [[nil, nil, nil], 
+				  [nil, nil, nil], 
+				  [nil, nil, nil]]
+		@player_o = 'o'
+		@player_x = 'x'
+	end
+~~~~
+
+little things, deleting board.rb and updated the spec/models/board_spec.rb to spec/models/game_spec.rb
+
+~~~~
+@@@ ruby
+
+TicTacToe$ touch spec/models/game_spec.rb
+
+~~~~
+
+Updating Board content to Game content, such as:
+
+~~~~
+@@@ ruby
+
+describe Game do 
+	before do
+		@test_game = Game.new
+	end
+
+~~~~
+
+updating assign_player_position
+
+~~~~
+@@@ ruby
+
+	def assign_player_position(player, row, column)
+		player = @player_o, @player_x
+		@board[row][column] = player
+	end
+
+~~~~ 
+
+running to tests now just to see what's failing and what should change next...
+
+~~~~
+@@@ ruby
+
+TicTacToe$ bundle exec rspec spec
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+FFFF..FF.F
+
+Failures:
+
+  1) Game should be initialized with nil values inside of the array, [[]]
+     Failure/Error: @test_game.board.should == [[nil, nil, nil],
+     NoMethodError:
+       undefined method `has_key?' for nil:NilClass
+     # ./spec/models/game_spec.rb:9:in `block (2 levels) in <top (required)>'
+~~~~
+
+!SLIDE
+
+~~~~
+@@@ ruby
+
+  2) Game should always have a length of 3
+     Failure/Error: @test_game.board.length.should == 3
+     NoMethodError:
+       undefined method `has_key?' for nil:NilClass
+     # ./spec/models/game_spec.rb:15:in `block (2 levels) in <top (required)>'
+
+  3) Game should always have the array within the array length of 3
+     Failure/Error: @test_game.board.each { |array| array.length.should == 3 }
+     NoMethodError:
+       undefined method `has_key?' for nil:NilClass
+     # ./spec/models/game_spec.rb:19:in `block (2 levels) in <top (required)>'
+
+  4) Game assign_player_position should establish a position on the board, using 'x' or 'o'
+     Failure/Error: to_test.should == @test_game.board[0][1]
+     NoMethodError:
+       undefined method `has_key?' for nil:NilClass
+     # ./spec/models/game_spec.rb:25:in `block (3 levels) in <top (required)>'
+~~~~
+
+!SLIDE
+
+~~~~
+@@@ ruby
+
+  5) Game display_element should display an 'x' or an 'o' if the element is not a space
+     Failure/Error: @test_game.display_element(0,1).should == 'x'
+       expected: "x"
+            got: ["o", "x"] (using ==)
+     # ./spec/models/game_spec.rb:43:in `block (3 levels) in <top (required)>'
+
+  6) Game display_line should display player marks or a space (if nil) in the designated row
+     Failure/Error: to_test.should == " | |x\n"
+       expected: " | |x\n"
+            got: " | |[\"o\", \"x\"]\n" (using ==)
+       Diff:
+       @@ -1,2 +1,2 @@
+       - | |x
+       + | |["o", "x"]
+     # ./spec/models/game_spec.rb:52:in `block (3 levels) in <top (required)>'
+~~~~
+
+!SLIDE
+
+~~~~
+@@@ ruby
+
+  7) Game display_board should display player marks on the board
+     Failure/Error: " | |x\n"
+       expected: "x| | \n- - -\n |o| \n- - -\n | |x\n"
+            got: "[\"o\", \"x\"]| | \n- - -\n |[\"o\", \"x\"]| \n- - -\n | |[\"o\", \"x\"]\n" (using ==)
+       Diff:
+       
+       
+       @@ -1,6 +1,6 @@
+       -x| | 
+       +["o", "x"]| | 
+        - - -
+       - |o| 
+       + |["o", "x"]| 
+        - - -
+       - | |x
+       + | |["o", "x"]
+     # ./spec/models/game_spec.rb:74:in `block (3 levels) in <top (required)>'
+
+Finished in 0.04731 seconds
+10 examples, 7 failures
+~~~~
+
+alright, this is good...we've got a bunch to update...not to bad though...
+
+# fixed the simplest error for now, which was to change assign_player_position to it's orginial form
+
+~~~~
+@@@ ruby
+
+	def assign_player_position(player, row, column)
+		@board[row][column] = player
+	end
+
+~~~~ 
+
+now only the first 4 tests are failing at 
+
+~~~~
+@@@ ruby
+
+undefined method `has_key?' for nil:NilClass
+
+~~~~ 
+
+I wanted to know why the computer thinks there is an undefined method called `has_key?...I'm remembering that becuase it likely wants it's own #board such as, 
+
+~~~~
+@@@ ruby
+
+	def board
+		@board
+	end
+~~~~
+
+!SLIDES
+
+running tests...
+
+~~~~
+@@@ ruby
+
+TicTacToe$ bundle exec rspec spec
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+..........
+
+Finished in 0.02252 seconds
+10 examples, 0 failures
+~~~~
+
+yay! that was all we needed!
+
+# running rollback
+
+As I was going to through the Micheal Hartl tutorial I learned that created_at and updated_at are automatically generated. I could also add columns as I go. For now, will only have players, board, status and current player. I will add other columns was needed. 
+
+~~~~
+@@@ ruby
+
+TicTacToe$ rake db:rollback
+~~~~
+
+updated 
+
+~~~~
+@@@ ruby
+
+class CreateGames < ActiveRecord::Migration
+  def change
+    create_table :games do |t|
+      t.text :board,            {:default => Array.new(3).map{[]}}
+      t.string :player_o,       {:default => 'o'}
+      t.string :player_x,       {:default => 'x'}
+      t.string :current_player
+      t.string :status,         {:default => 'in_progress'}
+
+      t.timestamps
+    end
+  end
+end
+~~~~
+ 
+in db/migrate/20130406222125_create_games.rb
+ran rake db:migrate and rake db:test:prepare
+
+!SLIDE
+
+now schema.rb looks like this...
+
+~~~~
+@@@ ruby
+
+ ActiveRecord::Schema.define(:version => 20130406222125) do
+
+  create_table "games", :force => true do |t|
+    t.text     "board",          :default => "'---\n- []\n- []\n- []\n'"
+    t.string   "player_o",       :default => "o"
+    t.string   "player_x",       :default => "x"
+    t.string   "current_player"
+    t.string   "status",         :default => "in_progress"
+    t.datetime "created_at",                                              :null => false
+    t.datetime "updated_at",                                              :null => false
+  end
+
+end
+~~~~
+
+don't understand why the board formatting looks the way it does, we'll need to inquire about this...running all the test and they each passed. 
+
+# TODO refactor methods in #Game
+
+updated @board to 
+
+~~~~
+@@@ ruby
+
+@board = Array.new(3).map{[nil, nil, nil]}
+~~~~
+
+for now...
+
+# Updating routes.rb
+
+in config/routes.rb
+
+~~~~
+@@@ ruby
+
+resources :games
+~~~~
+
+~~~~
+@@@ ruby
+
+TicTacToe$ rake routes
+    games GET    /games(.:format)          games#index
+          POST   /games(.:format)          games#create
+ new_game GET    /games/new(.:format)      games#new
+edit_game GET    /games/:id/edit(.:format) games#edit
+     game GET    /games/:id(.:format)      games#show
+          PUT    /games/:id(.:format)      games#update
+          DELETE /games/:id(.:format)      games#destroy
+~~~~
+
+# now onto game controller
+
+creating a spec/controllers/game_controller_spec.rb
 
 ~~~~
 @@@ ruby
 require 'spec_helper'
-require 'board_controller'
+require 'games_controller'
 
-describe BoardController do
+describe GamesController do
 
 end
 ~~~~
@@ -645,16 +991,16 @@ running it...
 @@@ ruby
 TicTacToe$ bundle exec rspec spec/controllers/
 Rack::File headers parameter replaces cache_control after Rack 1.5.
-/Users/zmontesd/.rvm/gems/ruby-1.9.3-p194@rails3tutorial2ndEd/gems/activesupport-3.2.11/lib/active_support/dependencies.rb:251:in `require': cannot load such file -- board_controller (LoadError)
+/Users/zmontesd/.rvm/gems/ruby-1.9.3-p194@rails3tutorial2ndEd/gems/activesupport-3.2.11/lib/active_support/dependencies.rb:251:in `require': cannot load such file -- games_controller (LoadError)
 ~~~~
 
 !SLIDE
 
-yes, expected response, making the board_controller.rb. notice, I only ran the controller test - avoiding the model tests for now...
+yes, expected response, making the games_controller.rb. notice, I only ran the controller test - avoiding the model tests for now...
 
 ~~~~
 @@@ ruby
-class BoardController < ApplicationController
+class GamesController < ApplicationController
 
 end
 ~~~~
@@ -674,13 +1020,209 @@ Finished in 0.00014 seconds
 
 !SLIDE
 
-alright, what do controllers need?
+# alright, what do controllers need? Starting with tests
+
+~~~~
+@@@ ruby
+
+describe GamesController do
+	describe "GET games#index" do
+		before(:each) do 
+			get :index
+		end
+
+		it 'should set the @games instance variable to a set of all Games' do
+        	assigns[:games].should_not be_nil
+        	assigns[:games].all? {|game| game.kind_of?(Game)}.should be_true
+    	end
+    end
+end
+
+~~~~
+
+# running tests...
+
+~~~~
+@@@ ruby
+
+TicTacToe$ bundle exec rspec spec/controllers/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+F
+
+Failures:
+
+  1) GamesController should set the @games instance variable to a set of all Games
+     Failure/Error: get :index
+     NameError:
+       uninitialized constant GamesController::Games
+     # ./app/controllers/games_controller.rb:4:in `index'
+     # ./spec/controllers/games_controller_spec.rb:8:in `block (2 levels) in <top (required)>'
+
+Finished in 0.06245 seconds
+1 example, 1 failure
+~~~~
+
+# now, creating an index method in Games
+
+~~~~
+@@@ ruby
+
+	def index
+		@games = Game.all
+	end
+~~~~
+
+# re-running test, expecting an error since views are missing...
+
+~~~~
+@@@ ruby
+TicTacToe$ bundle exec rspec spec/controllers/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+F
+
+Failures:
+
+  1) GamesController GET games#index should set the @games instance variable to a set of all Games
+     Failure/Error: get :index
+     ActionView::MissingTemplate:
+       Missing template games/index, application/index with {:locale=>[:en], :formats=>[:html], :handlers=>[:erb, :builder, :coffee]}. Searched in:
+         * "#<RSpec::Rails::ViewRendering::EmptyTemplatePathSetDecorator:0x007fb754d123c0>"
+     # ./spec/controllers/games_controller_spec.rb:9:in `block (3 levels) in <top (required)>'
+
+Finished in 0.11067 seconds
+1 example, 1 failure
+~~~~
+
+# adding a views/layouts/games/index.html.erb 
+
+~~~~
+@@@ ruby
+
+TicTacToe$ mkdir app/views/games
+TicTacToe$ touch app/views/games/index.html.erb
+~~~~
+
+for fun, adding 
+
+~~~~
+@@@ ruby
+
+<h1>TicTacToe is coming soon!</h1>
+~~~~
+
+into app/views/games/index.html.erb
+
+!SLIDE
+
+ran controller test again and voilà!
+
+~~~~
+@@@ ruby
+
+TicTacToe$ bundle exec rspec spec/controllers/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+.
+
+Finished in 0.11957 seconds
+1 example, 0 failures
+~~~~
+
+# now test for setting a new Game
+
+~~~~
+@@@ ruby
+
+    describe "GET games#new" do
+    	before(:each) do
+      		get :new
+    	end
+
+    	it "should set the @game variable to a new game" do
+      		assigns[:game].try(:kind_of?, Game).should be_true
+    	end
+	end
+~~~~
+
+!SLIDE
+
+running rspec on controllers
+
+~~~~
+@@@ ruby
+
+TicTacToe zmontesd$ bundle exec rspec spec/controllers/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+.F
+
+Failures:
+
+  1) GamesController GET games#new should set the @game variable to a new game
+     Failure/Error: get :new
+     AbstractController::ActionNotFound:
+       The action 'new' could not be found for GamesController
+     # ./spec/controllers/games_controller_spec.rb:20:in `block (3 levels) in <top (required)>'
+
+Finished in 0.12993 seconds
+2 examples, 1 failure
+~~~~
+
+creating a new method
+
+~~~~
+@@@ ruby
+
+	def new
+		@games = Game.new
+	end
+~~~~
+
+running tests...
+
+~~~~
+@@@ ruby
+
+TicTacToe$ bundle exec rspec spec/controllers/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+.F
+
+Failures:
+
+  1) GamesController GET games#new should set the @game variable to a new game
+     Failure/Error: get :new
+     ActionView::MissingTemplate:
+       Missing template games/new, application/new with {:locale=>[:en], :formats=>[:html], :handlers=>[:erb, :builder, :coffee]}. Searched in:
+         * "#<RSpec::Rails::ViewRendering::EmptyTemplatePathSetDecorator:0x007f9d24662da8>"
+     # ./spec/controllers/games_controller_spec.rb:20:in `block (3 levels) in <top (required)>'
+
+Finished in 0.13208 seconds
+2 examples, 1 failure
+~~~~
+
+!SLIDE
+
+we expected that failure, base on what we saw before, so let's create more views...
+
+~~~~
+@@@ ruby
+
+TicTacToe$ touch app/views/games/new.html.erb
+~~~~
+
+running the tests again...
+
+~~~~
+@@@ ruby
+
+TicTacToe$ bundle exec rspec spec/controllers/
+Rack::File headers parameter replaces cache_control after Rack 1.5.
+..
+
+Finished in 0.12696 seconds
+2 examples, 0 failures
+~~~~
 
 ### TODOs, notes and to think about...
 
-* `routes for the board`
-* `resources: board`
-* `generate models and run a migration? what should my board model include? - player_position:string and...`
-* `list out other items for board needs...i.e., idenitfying the position`
-* `test and make the views and controller for the board`
-* `create a new_board method`
+* `test and make the views and controller on games`
+* `more methods to actually play the game`
+* `bootstrap to enhance views?`
