@@ -1,10 +1,48 @@
 # TicTacToe
 
-Creating TicTacToe as a tool to learn how to make a rails app. Users will be WWC, RubyTuesday ladies. Documenting TicTacToe as it's built. Building project one feature at a time. And of course TestTestTest!
+Learn Rails through TicTacToe. It's test driven, fill in the blanks and...Have fun!
 
-Please note - this is a rough draft. 
+# Getting Started
 
-# test Board.rb
+* `[fork](https://github.com/zmontesd/TicTacToeSkeleton) this repo and cloning it to your computer`
+* `edit your code on a text editor, i.e. Sublime or Komodo Edit`
+
+# Command Line Steps
+
+~~~~
+@@@ ruby
+$ bundle install        
+// installs any gems that you need, which are listed in your Gemfile
+
+$ rake db:migrate       
+// runs any migrations you have and sets up your database and datamodel
+~~~~
+
+# Running Tests...
+
+~~~~
+@@@ ruby
+$ rspec spec/          
+// runs all the tests in the project
+~~~~
+
+if you get errors, run 
+
+~~~~
+@@@ ruby
+$ rake db:test:prepare
+$ rspec spec/
+~~~~
+
+# Getting to know your App
+
+Let's with the helper methods!
+
+
+
+# 
+
+# test Game.rb
 
 Starting with the test...checking whether board.rb and Board class exist
 
@@ -1221,8 +1259,138 @@ Finished in 0.12696 seconds
 2 examples, 0 failures
 ~~~~
 
+# getting pretty with the front-end, installing Bootstrap
+
+TicTacToe/gemfile
+
+~~~~
+@@@ ruby
+
+group :assets do
+  gem 'bootstrap-sass-rails'
+end	
+
+~~~~
+
+~~~~
+@@@ ruby
+
+TicTacToe$ bundle install
+
+~~~~
+
+in TicTacToe/app/assets/stylesheets/application.css
+
+~~~~
+@@@ css
+
+ *= require twitter/bootstrap
+
+~~~~
+
+# running rails console 
+
+~~~~
+@@@ ruby
+
+TicTacToe$ rails c
+1.9.3-p194 :006 > game = Game.new
+ => #<Game not initialized> 
+
+~~~~
+
+hmm...error...
+updating gemfile, shouldn't do anything but this updated needed to happen anyway before we push the app to heroku since they run on postgreSQL (pg) istead of sqlite3. 
+
+in Gemfile
+
+~~~~
+@@@ ruby
+
+group :development do
+	gem 'sqlite3'
+end
+
+group :production do
+  gem 'pg', '0.12.2'
+end
+
+~~~~
+
+~~~~
+@@@ ruby
+
+TicTacToe$ bundle install
+
+~~~~
+
+exiting console and just running game.rb
+
+1.9.3-p194 :002 > exit
+
+TicTacToe$ cd app/models/
+
+models zmontesd$ ruby game.rb
+game.rb:1:in `<main>': uninitialized constant ActiveRecord (NameError)
+
+alright, going back to console to see if ActiveRecord is recognized, the silly thing is that Game.new works in models/game_rspec.rb
+
+1.9.3-p194 :002 > ActiveRecord::Base.connection.tables
+ => ["schema_migrations", "games"] 
+
+# Documentation officially got messy, adding in random notes as I go...
+
+making and testing player method. we want it to set the current player and update the board. first test. 
+
+  describe "play" do 
+    it "should set a current player 9 times" do
+      @test_game.play.should == [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    end
+  end
+
+# next step, how to get it to update the board?
+
+Well we want the current player input since it sets the current/next player. So we'll call the current player in this #player. Then we want to check for winner so we'll also call on #winner?
+
+# now onto controllers
+
+# using pry
+
+like irb but better
+*`syntax highlighting`
+*`pry commands`
+* `to get in: pry`
+* everything but text editor
+- lots of small things that save time
+-pry maintains local v _
+- what's base 64? does it come with pry?
+evaluate ruby code
+colour
+tab-completion
+_(the last output)
+^ (is control)
+commands
+_file_
+_out_
+$
+wtf?
+edit file with: binding.pry
+ to see what's not working...
+instead of puts class.method
+allows you to cd into doc when inside pry
+.git diff
+whereami
+@board; (; doesn't return nil)
+^d
+.exit
+edit --ex
+.(run's shell commands)
+pry-rescue
+pry-stack_explorer
+BetterErrors.use_pry!
+pry-plus - list plug-in
+pry-rails - rails c use pry!
+
 ### TODOs, notes and to think about...
 
 * `test and make the views and controller on games`
-* `more methods to actually play the game`
-* `bootstrap to enhance views?`
