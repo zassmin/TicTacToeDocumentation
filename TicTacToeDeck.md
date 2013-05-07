@@ -4,9 +4,9 @@ Learn Rails through TicTacToe. It's test driven, fill in the blanks and...Have f
 
 # Getting Started
 
-* `Find the Repo here: https://github.com/zmontesd/TicTacToeSkeleton...`
+* `Find the Repo here: https://github.com/WomenWhoCode/TicTacToeSkeleton`
 * `Fork it, instructions here: https://help.github.com/articles/fork-a-repo`
-* `Clone it to your computer, follow this: ....`
+* `Clone it to your computer`
 * `Open the App in your text editor, i.e. Sublime or Komodo Edit`
 
 # Gemfile
